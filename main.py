@@ -1,30 +1,38 @@
 import discord
 from discord.ext import commands
-from rcon.source import Client
 import docker
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-SERVER_IP = os.getenv('SERVER_IP')
-SERVER_PORT = int(os.getenv('SERVER_PORT'))
-RCON_PASSWORD = os.getenv('RCON_PASSWORD')
 TOKEN = os.getenv('BOT_TOKEN')
-# Bot setup
-bot = commands.Bot(command_prefix="!")
 
 # Docker client setup
 docker_client = docker.from_env()
 
 
+# Bot setup
+intents = discord.Intents.default()
+bot = commands.Bot(command_prefix='/', intents=intents)
+bot.auto_sync_commands = True
+
+
+@bot.event
+async def on_connect():
+    if bot.auto_sync_commands:
+        await bot.sync_commands()
+    print(f'Logged in as {bot.user.name}')
+
+
 @bot.command()
 async def check_status(ctx):
-    try:
-        with Client(SERVER_IP, SERVER_PORT, passwd=RCON_PASSWORD) as client:
-            response = client.run('admincheat', 'listplayers')
-        await ctx.send(f'Server status: {response}')
-    except Exception as e:
-        await ctx.send(f'Error checking server status: {e}')
+    container = docker_client.containers.get('ark-server')
+    if container.status == 'running':
+        await ctx.send('Server is online!')
+        return
+    else:
+        docker_client.containers.run('ark-server', detach=True)
+        await ctx.send('Server is offline.  :(  Run /start_server to start it up!')
 
 
 @bot.command()
