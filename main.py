@@ -28,7 +28,7 @@ async def on_connect():
 async def check_status(ctx):
     container = docker_client.containers.get('ark-server')
     if container.status == 'running':
-        await ctx.send('Server is online!')
+        await ctx.respond('Server is online!')
         return
     else:
         docker_client.containers.run('ark-server', detach=True)
@@ -40,7 +40,7 @@ async def start_server(ctx):
     # Check if server is running
     container = docker_client.containers.get('ark-server')
     if container.status == 'running':
-        await ctx.send('Server is already running')
+        await ctx.respond('Server is already running')
         return
     else:
         docker_client.containers.run('ark-server', detach=True)
@@ -52,11 +52,11 @@ async def stop_server(ctx):
     container = docker_client.containers.get('ark-server')
     # Check if server is running
     if container.status != 'running':
-        await ctx.send('Server is not running')
+        await ctx.respond('Server is not running')
         return
     else:
+        await ctx.respond('Stopping ARK server...')
         container.stop()
-        await ctx.send('Stopping ARK server...')
 
 # Run the bot
 bot.run(TOKEN)
