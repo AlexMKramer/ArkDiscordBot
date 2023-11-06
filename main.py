@@ -42,7 +42,8 @@ async def start_server(ctx):
         await ctx.respond('Server is already running')
         return
     else:
-        container.run(detach=True)
+        # Start the server
+        container.start(detached=True)
         await ctx.respond('Starting ARK server...')
 
 
