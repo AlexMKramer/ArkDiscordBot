@@ -24,7 +24,7 @@ async def on_connect():
     print(f'Logged in as {bot.user.name}')
 
 
-@bot.command()
+@bot.slash_command(description='Check the status of the ARK server')
 async def check_status(ctx):
     container = docker_client.containers.get('ark-server')
     if container.status == 'running':
@@ -35,7 +35,7 @@ async def check_status(ctx):
         await ctx.send('Server is offline.  :(  Run /start_server to start it up!')
 
 
-@bot.command()
+@bot.slash_command(description='Start the ARK server')
 async def start_server(ctx):
     # Check if server is running
     container = docker_client.containers.get('ark-server')
@@ -46,7 +46,8 @@ async def start_server(ctx):
         docker_client.containers.run('ark-server', detach=True)
         await ctx.send('Starting ARK server...')
 
-@bot.command()
+
+@bot.slash_command(description='Stop the ARK server')
 async def stop_server(ctx):
     container = docker_client.containers.get('ark-server')
     # Check if server is running
