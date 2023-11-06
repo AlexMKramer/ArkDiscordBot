@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from rcon.source import rcon
+from rcon.source import Client
 import docker
 import os
 from dotenv import load_dotenv
@@ -16,12 +16,12 @@ bot = commands.Bot(command_prefix="!")
 # Docker client setup
 docker_client = docker.from_env()
 
+
 @bot.command()
 async def check_status(ctx):
     try:
-        response = await rcon(
-            'admincheat', 'listplayers',
-            host=SERVER_IP, port=SERVER_PORT, passwd=RCON_PASSWORD)
+        with Client(SERVER_IP, SERVER_PORT, passwd=RCON_PASSWORD) as client:
+            response = client.run('admincheat', 'listplayers')
         await ctx.send(f'Server status: {response}')
     except Exception as e:
         await ctx.send(f'Error checking server status: {e}')
