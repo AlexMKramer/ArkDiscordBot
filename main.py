@@ -31,8 +31,7 @@ async def check_status(ctx):
         await ctx.respond('Server is online!')
         return
     else:
-        docker_client.containers.run('ark-server', detach=True)
-        await ctx.send('Server is offline.  :(  Run /start_server to start it up!')
+        await ctx.respond('Server is offline.  :(  Run /start_server to start it up!')
 
 
 @bot.slash_command(description='Start the ARK server')
@@ -43,8 +42,8 @@ async def start_server(ctx):
         await ctx.respond('Server is already running')
         return
     else:
-        docker_client.containers.run('ark-server', detach=True)
-        await ctx.send('Starting ARK server...')
+        container.run(detach=True)
+        await ctx.respond('Starting ARK server...')
 
 
 @bot.slash_command(description='Stop the ARK server')
