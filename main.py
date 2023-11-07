@@ -135,7 +135,7 @@ def parse_log_file():
     new_data = {
         'tamed_dinos': tamed_dinos,
         'player_deaths': player_deaths
-}
+    }
 
     with open('data.json', 'w') as file:
         json.dump(new_data, file, indent=4)
