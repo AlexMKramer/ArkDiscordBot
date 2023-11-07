@@ -93,7 +93,7 @@ def compare_data(original_data, new_data, data_type):
 
     if no_changes:
         # If no changes, print all current values from new_data
-        message = "No changes detected. Current status:\n"
+        message = "No changes detected.\n Current stats:\n"
         for key, value in new_data.items():
             message += f"{key}: {value}\n"
     return message
