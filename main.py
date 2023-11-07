@@ -184,7 +184,7 @@ async def player_stats(ctx):
 
 
 @bot.slash_command(description='Get tamed dino stats!')
-async def player_stats(ctx):
+async def dino_stats(ctx):
     # Parse the log file
     dino_message, player_message = parse_log_file()
     await ctx.respond(dino_message)
