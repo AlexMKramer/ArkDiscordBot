@@ -47,11 +47,6 @@ def reformat_file(file_path, output_path):
             output_file.write(f'{match[0]}: {match[1].strip()}\n')
 
 
-# Initialize counters
-tamed_dinos = defaultdict(int)
-player_deaths = defaultdict(int)
-
-
 # Function to load data from a JSON file
 def load_data_from_json(filename):
     try:
@@ -106,6 +101,9 @@ def compare_data(original_data, new_data, data_type):
 
 # Parse the log file
 def parse_log_file():
+    # Initialize counters
+    tamed_dinos = defaultdict(int)
+    player_deaths = defaultdict(int)
     try:
         reformat_file(TRIBE_LOG_PATH, 'tribe_log.txt')
         with open('tribe_log.txt', 'r') as file:
