@@ -47,9 +47,6 @@ def reformat_file(file_path, output_path):
             output_file.write(f'{match[0]}: {match[1].strip()}\n')
 
 
-# Usage
-reformat_file(TRIBE_LOG_PATH, 'tribe_log.txt')
-
 # Initialize counters
 tamed_dinos = defaultdict(int)
 player_deaths = defaultdict(int)
@@ -110,7 +107,8 @@ def compare_data(original_data, new_data, data_type):
 # Parse the log file
 def parse_log_file():
     try:
-        with open('output.txt', 'r') as file:
+        reformat_file(TRIBE_LOG_PATH, 'tribe_log.txt')
+        with open('tribe_log.txt', 'r') as file:
             for line in file:
                 if "Tamed" in line:
                     dino_type = line[line.find("(")+1:line.find(")")]
