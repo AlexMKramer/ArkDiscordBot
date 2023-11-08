@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import docker
 import os
 from dotenv import load_dotenv
@@ -148,27 +148,55 @@ def is_anyone_online():
     if response == 'No Players Connected':
         return 'No'
     else:
-        return response
+        player_count = len(response.split('\n'))
+        return response, player_count
+
+
+def is_container_running(container_name):
+    container = docker_client.containers.get(container_name)
+    if container.status == 'running':
+        return True
+    else:
+        return False
+
+
+# Task that runs every 5 minutes
+@tasks.loop(minutes=5)
+async def update_rich_presence():
+    if is_container_running('ark-server'):
+        response, player_count = is_anyone_online()
+        if response == 'No':
+            await bot.change_presence(activity=discord.Game(name='ARK: Survival Ascended'))
+        else:
+            if player_count == 1:
+                await bot.change_presence(activity=discord.Game(name=f'ARK: Survival Ascended - {player_count} player online!'))
+            else:
+                await bot.change_presence(activity=discord.Game(name=f'ARK: Survival Ascended - {player_count} players online!'))
+    else:
+        await bot.change_presence(activity=discord.Game(name='ARK: Survival Ascended - Server offline'))
 
 
 @bot.event
 async def on_connect():
     if bot.auto_sync_commands:
         await bot.sync_commands()
+    update_rich_presence.start()
     print(f'Logged in as {bot.user.name}')
 
 
 @bot.slash_command(description='Check the status of the ARK server')
 async def check_status(ctx):
-    container = docker_client.containers.get('ark-server')
-    if container.status == 'running':
+    if is_container_running('ark-server'):
         await ctx.respond('Server is online!')
         # Check if anyone is online
-        response = is_anyone_online()
+        response, player_count = is_anyone_online()
         if response == 'No':
             await ctx.respond('No one is online.  :(')
         else:
-            await ctx.send(f'Someone is online!  :D\n' + response)
+            if player_count == 1:
+                await ctx.send(f'There is {player_count} player online!  :D\n' + response)
+            else:
+                await ctx.send(f'There are {player_count} players online!  :D\n' + response)
         return
     else:
         await ctx.respond('Server is offline.  :(  Run "/start_server" to start it up!')
@@ -205,12 +233,12 @@ async def start_server(ctx):
 async def stop_server(ctx):
     container = docker_client.containers.get('ark-server')
     # Check if server is running
-    if container.status != 'running':
+    if not is_container_running('ark-server'):
         await ctx.respond('Server is not running')
         return
     else:
         # Check if anyone is online
-        response = is_anyone_online()
+        response, player_count = is_anyone_online()
         if response == 'No':
             await ctx.respond('No one is online, stopping server')
             container.stop()
@@ -224,7 +252,7 @@ async def stop_server(ctx):
 async def kill_server(ctx):
     container = docker_client.containers.get('ark-server')
     # Check if server is running
-    if container.status != 'running':
+    if not is_container_running('ark-server'):
         await ctx.respond('Server is not running')
         return
     else:
@@ -235,7 +263,7 @@ async def kill_server(ctx):
             container.stop()
         else:
             await ctx.respond('Someone is online, but killing the server anyway.  :D')
-            await ctx.respond('Booting\n' + response)
+            await ctx.send('Booting\n' + response)
             container.stop()
         return
 
