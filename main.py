@@ -166,14 +166,14 @@ async def update_rich_presence():
     if is_container_running('ark-server'):
         response, player_count = is_anyone_online()
         if response == 'No':
-            await bot.change_presence(activity=discord.Game(name='ARK: Survival Ascended'))
+            await bot.change_presence(activity=discord.Game(name='ASA: Nobody online!'))
         else:
             if player_count == 1:
-                await bot.change_presence(activity=discord.Game(name=f'ARK: Survival Ascended - {player_count} player online!'))
+                await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} player online!'))
             else:
-                await bot.change_presence(activity=discord.Game(name=f'ARK: Survival Ascended - {player_count} players online!'))
+                await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} players online!'))
     else:
-        await bot.change_presence(activity=discord.Game(name='ARK: Survival Ascended - Server offline'))
+        await bot.change_presence(activity=discord.Game(name='ASA: Server offline'))
 
 
 @bot.event
