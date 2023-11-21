@@ -144,11 +144,8 @@ def parse_log_file():
 def is_anyone_online():
     with Client(SERVER_IP, SERVER_PORT, passwd=RCON_PASSWORD) as client:
         response = client.run('listPlayers')
-    print(response)
     response = response.strip()
-    print(response)
     if str.startswith(response, 'No Players Connected'):
-    # if response == 'No Players Connected':
         response = 'No'
         player_count = 0
         return response, player_count
@@ -196,7 +193,7 @@ async def check_status(ctx):
         # Check if anyone is online
         response, player_count = is_anyone_online()
         if response == 'No':
-            await ctx.respond('No one is online.  :(')
+            await ctx.send('No one is online.  :(')
         else:
             if player_count == 1:
                 await ctx.send(f'There is {player_count} player online!  :D\n' + response)
