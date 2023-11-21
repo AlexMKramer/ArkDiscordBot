@@ -147,8 +147,11 @@ def is_anyone_online():
     print(response)
     response = response.strip()
     print(response)
-    if response == 'No Players Connected':
-        return 'No'
+    if str.startswith(response, 'No Players Connected'):
+    # if response == 'No Players Connected':
+        response = 'No'
+        player_count = 0
+        return response, player_count
     else:
         player_count = len(response.split('\n'))
         return response, player_count
