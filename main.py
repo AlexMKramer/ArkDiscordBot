@@ -145,6 +145,7 @@ def is_anyone_online():
     with Client(SERVER_IP, SERVER_PORT, passwd=RCON_PASSWORD) as client:
         response = client.run('listPlayers')
     response = response.strip()
+    print(response)
     if response == 'No Players Connected':
         return 'No'
     else:
