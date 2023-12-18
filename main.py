@@ -1,4 +1,5 @@
 import discord
+from discord import option
 from discord.ext import commands, tasks
 import docker
 import os
@@ -23,6 +24,12 @@ docker_client = docker.from_env()
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix='/', intents=intents)
 bot.auto_sync_commands = True
+
+
+server_types = [
+    "ark-server",
+    "satisfactory-server-coop"
+]
 
 
 def reformat_file(file_path, output_path):
@@ -174,8 +181,10 @@ async def update_rich_presence():
                 await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} player online!'))
             else:
                 await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} players online!'))
+    elif is_container_running('satisfactory-server-coop'):
+        await bot.change_presence(activity=discord.Game(name='Satisfactory: Server online'))
     else:
-        await bot.change_presence(activity=discord.Game(name='ASA: Server offline'))
+        await bot.change_presence(activity=discord.Game(name='Servers offline'))
 
 
 @bot.event
@@ -186,10 +195,10 @@ async def on_connect():
     print(f'Logged in as {bot.user.name}')
 
 
-@bot.slash_command(description='Check the status of the ARK server')
+@bot.slash_command(description='Check the status of the server.')
 async def check_status(ctx):
     if is_container_running('ark-server'):
-        await ctx.respond('Server is online!')
+        await ctx.respond('Ark server is online!')
         # Check if anyone is online
         response, player_count = is_anyone_online()
         if response == 'No':
@@ -200,6 +209,8 @@ async def check_status(ctx):
             else:
                 await ctx.send(f'There are {player_count} players online!  :D\n' + response)
         return
+    elif is_container_running('satisfactory-server-coop'):
+        await ctx.respond('Satisfactory server is online!')
     else:
         await ctx.respond('Server is offline.  :(  Run "/start_server" to start it up!')
 
@@ -218,54 +229,89 @@ async def dino_stats(ctx):
     await ctx.respond(dino_message)
 
 
-@bot.slash_command(description='Start the ARK server')
-async def start_server(ctx):
+@bot.slash_command(description='Start one of the servers!')
+@option(
+    "server_type",
+    description="Choose a server to start",
+    required=True,
+    autocomplete=server_types,
+)
+async def start_server(ctx, server_type: str):
     # Check if server is running
-    container = docker_client.containers.get('ark-server')
-    if container.status == 'running':
-        await ctx.respond('Server is already running')
-        return
-    else:
-        # Start the server
-        container.start()
-        await ctx.respond('Starting ARK server...')
+    container = docker_client.containers.get(server_type)
+    # Go through all server types and check if any are running
+    for i in server_types:
+        # if any server is running respond with the server type
+        if is_container_running(i):
+            # If the server that is running is the same as the one that was requested, tell the user its already running
+            if i == server_type:
+                await ctx.respond(f'{i} is already running')
+                return
+            # If the server that is running is not the same as the one that was requested, tell the user to stop the running server first
+            else:
+                await ctx.respond(f'{i} is already running.  Stop it first!')
+                return
+    # If no servers are running, start the server
+    container.start()
+    await ctx.respond(f'Starting {server_type}...')
+    return
 
 
-@bot.slash_command(description='Stop the ARK server')
-async def stop_server(ctx):
-    container = docker_client.containers.get('ark-server')
+@bot.slash_command(description='Stop a server')
+@option(
+    "server_type",
+    description="Choose a server to stop",
+    required=True,
+    autocomplete=server_types,
+)
+async def stop_server(ctx, server_type: str):
+    container = docker_client.containers.get(server_type)
     # Check if server is running
-    if not is_container_running('ark-server'):
+    if not is_container_running(server_type):
         await ctx.respond('Server is not running')
         return
     else:
-        # Check if anyone is online
-        response, player_count = is_anyone_online()
-        if response == 'No':
-            await ctx.respond('No one is online, stopping server')
-            container.stop()
+        if server_type == 'ark-server':
+            # Check if anyone is online
+            response, player_count = is_anyone_online()
+            if response == 'No':
+                await ctx.respond('No one is online, stopping server')
+                container.stop()
+            else:
+                await ctx.respond('Someone is online!  Run "/kill_server" to stop the server anyway.  :D')
+                await ctx.send(f'Users online:\n' + response)
         else:
-            await ctx.respond('Someone is online!  Run "/kill_server" to stop the server anyway.  :D')
-            await ctx.send(f'Users online:\n' + response)
+            await ctx.respond('Stopping server...')
+            container.stop()
         return
 
 
-@bot.slash_command(description='Stop the ARK server')
-async def kill_server(ctx):
-    container = docker_client.containers.get('ark-server')
+@bot.slash_command(description='Kill a server')
+@option(
+    "server_type",
+    description="Choose a server to stop",
+    required=True,
+    autocomplete=server_types,
+)
+async def kill_server(ctx, server_type: str):
+    container = docker_client.containers.get(server_type)
     # Check if server is running
-    if not is_container_running('ark-server'):
+    if not is_container_running(server_type):
         await ctx.respond('Server is not running')
         return
     else:
-        # Check if anyone is online
-        response = is_anyone_online()
-        if response == 'No':
-            await ctx.respond('No one is online, stopping server')
-            container.stop()
+        if server_type == 'ark-server':
+            # Check if anyone is online
+            response = is_anyone_online()
+            if response == 'No':
+                await ctx.respond('No one is online, stopping server')
+                container.stop()
+            else:
+                await ctx.respond('Someone is online, but killing the server anyway.  :D')
+                await ctx.send('Booting\n' + response)
+                container.stop()
         else:
-            await ctx.respond('Someone is online, but killing the server anyway.  :D')
-            await ctx.send('Booting\n' + response)
+            await ctx.respond('Killing server...')
             container.stop()
         return
 
