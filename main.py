@@ -187,7 +187,7 @@ async def update_rich_presence():
             else:
                 await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} players online!'))
     elif is_container_running('satisfactory-server-coop'):
-        await bot.change_presence(activity=discord.Game(name='Satisfactory: Server online'))
+        await bot.change_presence(activity=discord.Game(name='Satisfactory'))
     else:
         await bot.change_presence(activity=discord.Game(name='Servers offline'))
 
