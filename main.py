@@ -32,6 +32,11 @@ server_types = [
 ]
 
 
+# Function to return server_types for autocomplete
+async def server_types_autocomplete(ctx: discord.AutocompleteContext):
+    return (name for name in server_types if name.startswith(ctx.value.lower()))
+
+
 def reformat_file(file_path, output_path):
     try:
         # Try to open the file with utf-8 encoding
@@ -233,8 +238,8 @@ async def dino_stats(ctx):
 @option(
     "server_type",
     description="Choose a server to start",
-    required=True,
-    autocomplete=server_types,
+    autocomplete=server_types_autocomplete,
+    required=True
 )
 async def start_server(ctx, server_type: str):
     # Check if server is running
@@ -261,8 +266,8 @@ async def start_server(ctx, server_type: str):
 @option(
     "server_type",
     description="Choose a server to stop",
-    required=True,
-    autocomplete=server_types,
+    autocomplete=server_types_autocomplete,
+    required=True
 )
 async def stop_server(ctx, server_type: str):
     container = docker_client.containers.get(server_type)
@@ -290,8 +295,8 @@ async def stop_server(ctx, server_type: str):
 @option(
     "server_type",
     description="Choose a server to stop",
-    required=True,
-    autocomplete=server_types,
+    autocomplete=server_types_autocomplete,
+    required=True
 )
 async def kill_server(ctx, server_type: str):
     container = docker_client.containers.get(server_type)
