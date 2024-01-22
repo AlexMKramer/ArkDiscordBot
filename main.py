@@ -178,6 +178,12 @@ def is_anyone_online(port, rcon_password, command):
     except Exception as e:
         print(f'An error occurred: {e}')
         return 'No', 0
+    except ConnectionRefusedError:
+        print('Connection refused')
+        return 'No', 0
+    except TimeoutError:
+        print('Connection timed out')
+        return 'No', 0
 
 
 def is_container_running(container_name):
