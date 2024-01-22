@@ -193,7 +193,7 @@ async def update_rich_presence():
                 await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} player online!'))
             else:
                 await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} players online!'))
-    elif is_container_running('palworld-server'):
+    elif is_container_running('palworld-dedicated-server'):
         response, player_count = is_anyone_online(PALWORLD_PORT, PALWORLD_RCON_PASSWORD, 'ShowPlayers')
         if response == 'No':
             await bot.change_presence(activity=discord.Game(name='Pal: Nobody online!'))
