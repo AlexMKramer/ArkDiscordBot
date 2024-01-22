@@ -157,23 +157,27 @@ def parse_log_file():
 
 
 def is_anyone_online(port, rcon_password, command):
-    with Client(SERVER_IP, port, passwd=rcon_password) as client:
-        response = client.run(command)
-    response = response.strip()
-    if response.startswith('No Players Connected'):
-        print('No players connected')
-        response = 'No'
-        player_count = 0
-        return response, player_count
-    elif response.endswith('name,playeruid,steamid'):
-        print('No players connected')
-        response = 'No'
-        player_count = 0
-        return response, player_count
-    else:
-        player_count = len(response.split('\n'))
-        print(f'{player_count} players connected')
-        return response, player_count
+    try:
+        with Client(SERVER_IP, port, passwd=rcon_password) as client:
+            response = client.run(command)
+        response = response.strip()
+        if response.startswith('No Players Connected'):
+            print('No players connected')
+            response = 'No'
+            player_count = 0
+            return response, player_count
+        elif response.endswith('name,playeruid,steamid'):
+            print('No players connected')
+            response = 'No'
+            player_count = 0
+            return response, player_count
+        else:
+            player_count = len(response.split('\n'))
+            print(f'{player_count} players connected')
+            return response, player_count
+    except Exception as e:
+        print(f'An error occurred: {e}')
+        return 'No', 0
 
 
 def is_container_running(container_name):
