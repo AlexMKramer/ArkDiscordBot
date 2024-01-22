@@ -161,51 +161,63 @@ def is_anyone_online(port, rcon_password, command):
         response = client.run(command)
     response = response.strip()
     if response.startswith('No Players Connected'):
+        print('No players connected')
         response = 'No'
         player_count = 0
         return response, player_count
     elif response.endswith('name,playeruid,steamid'):
+        print('No players connected')
         response = 'No'
         player_count = 0
         return response, player_count
     else:
         player_count = len(response.split('\n'))
+        print(f'{player_count} players connected')
         return response, player_count
 
 
 def is_container_running(container_name):
     container = docker_client.containers.get(container_name)
     if container.status == 'running':
+        print(container_name + ' is running')
         return True
     else:
+        print(container_name + ' is not running')
         return False
 
 
 # Task that runs every 5 minutes
 @tasks.loop(minutes=5)
 async def update_rich_presence():
+    print('Updating rich presence')
     if is_container_running('ark-server'):
         response, player_count = is_anyone_online(SERVER_PORT, RCON_PASSWORD, 'listplayers')
         if response == 'No':
             await bot.change_presence(activity=discord.Game(name='ASA: Nobody online!'))
+            print('Ark: No one online')
         else:
             if player_count == 1:
                 await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} player online!'))
             else:
                 await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} players online!'))
+            print('Ark: Someone online')
     elif is_container_running('palworld-dedicated-server'):
         response, player_count = is_anyone_online(PALWORLD_PORT, PALWORLD_RCON_PASSWORD, 'ShowPlayers')
         if response == 'No':
             await bot.change_presence(activity=discord.Game(name='Pal: Nobody online!'))
+            print('Pal: No one online')
         else:
             if player_count == 1:
                 await bot.change_presence(activity=discord.Game(name=f'Pal: {player_count} player online!'))
             else:
                 await bot.change_presence(activity=discord.Game(name=f'Pal: {player_count} players online!'))
+            print('Pal: Someone online')
     elif is_container_running('satisfactory-server-coop'):
         await bot.change_presence(activity=discord.Game(name='Satisfactory'))
+        print('Satisfactory: Server online')
     else:
         await bot.change_presence(activity=discord.Game(name='Servers offline'))
+        print('All servers offline')
 
 
 @bot.event
