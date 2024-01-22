@@ -13,7 +13,9 @@ load_dotenv()
 TOKEN = os.getenv('BOT_TOKEN')
 SERVER_IP = os.getenv('SERVER_IP')
 SERVER_PORT = int(os.getenv('SERVER_PORT'))
+PALWORLD_PORT = int(os.getenv('PALWORLD_PORT'))
 RCON_PASSWORD = os.getenv('RCON_PASSWORD')
+PALWORLD_RCON_PASSWORD = os.getenv('PALWORLD_RCON_PASSWORD')
 TRIBE_LOG_PATH = os.getenv('TRIBE_LOG_PATH')
 
 # Docker client setup
@@ -28,7 +30,8 @@ bot.auto_sync_commands = True
 
 server_types = [
     "ark-server",
-    "satisfactory-server-coop"
+    "satisfactory-server-coop",
+    "palworld-dedicated-server"
 ]
 
 
@@ -153,11 +156,15 @@ def parse_log_file():
     return dino_message, player_message
 
 
-def is_anyone_online():
-    with Client(SERVER_IP, SERVER_PORT, passwd=RCON_PASSWORD) as client:
-        response = client.run('listPlayers')
+def is_anyone_online(port, rcon_password, command):
+    with Client(SERVER_IP, port, passwd=rcon_password) as client:
+        response = client.run(command)
     response = response.strip()
     if response.startswith('No Players Connected'):
+        response = 'No'
+        player_count = 0
+        return response, player_count
+    elif response.endswith('name,playeruid,steamid'):
         response = 'No'
         player_count = 0
         return response, player_count
@@ -178,7 +185,7 @@ def is_container_running(container_name):
 @tasks.loop(minutes=5)
 async def update_rich_presence():
     if is_container_running('ark-server'):
-        response, player_count = is_anyone_online()
+        response, player_count = is_anyone_online(SERVER_PORT, RCON_PASSWORD, 'listplayers')
         if response == 'No':
             await bot.change_presence(activity=discord.Game(name='ASA: Nobody online!'))
         else:
@@ -186,6 +193,15 @@ async def update_rich_presence():
                 await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} player online!'))
             else:
                 await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} players online!'))
+    elif is_container_running('palworld-server'):
+        response, player_count = is_anyone_online(PALWORLD_PORT, PALWORLD_RCON_PASSWORD, 'ShowPlayers')
+        if response == 'No':
+            await bot.change_presence(activity=discord.Game(name='Pal: Nobody online!'))
+        else:
+            if player_count == 1:
+                await bot.change_presence(activity=discord.Game(name=f'Pal: {player_count} player online!'))
+            else:
+                await bot.change_presence(activity=discord.Game(name=f'Pal: {player_count} players online!'))
     elif is_container_running('satisfactory-server-coop'):
         await bot.change_presence(activity=discord.Game(name='Satisfactory'))
     else:
@@ -205,7 +221,19 @@ async def check_status(ctx):
     if is_container_running('ark-server'):
         await ctx.respond('Ark server is online!')
         # Check if anyone is online
-        response, player_count = is_anyone_online()
+        response, player_count = is_anyone_online(SERVER_PORT, RCON_PASSWORD, 'listplayers')
+        if response == 'No':
+            await ctx.send('No one is online.  :(')
+        else:
+            if player_count == 1:
+                await ctx.send(f'There is {player_count} player online!  :D\n' + response)
+            else:
+                await ctx.send(f'There are {player_count} players online!  :D\n' + response)
+        return
+    elif is_container_running('palworld-dedicated-server'):
+        await ctx.respond('Palworld server is online!')
+        # Check if anyone is online
+        response, player_count = is_anyone_online(PALWORLD_PORT, PALWORLD_RCON_PASSWORD, 'ShowPlayers')
         if response == 'No':
             await ctx.send('No one is online.  :(')
         else:
@@ -252,7 +280,8 @@ async def start_server(ctx, server_type: str):
             if i == server_type:
                 await ctx.respond(f'{i} is already running')
                 return
-            # If the server that is running is not the same as the one that was requested, tell the user to stop the running server first
+            # If the server that is running is not the same as the one that was requested, tell the user to stop the
+            # running server first
             else:
                 await ctx.respond(f'{i} is already running.  Stop it first!')
                 return
