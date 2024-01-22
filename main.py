@@ -1,4 +1,5 @@
 import discord
+import rcon.exceptions
 from discord import option
 from discord.ext import commands, tasks
 import docker
@@ -158,7 +159,7 @@ def parse_log_file():
 
 def is_anyone_online(port, rcon_password, command):
     try:
-        with Client(SERVER_IP, port, passwd=rcon_password) as client:
+        with Client(SERVER_IP, port, passwd=rcon_password, timeout=4) as client:
             response = client.run(command)
         response = response.strip()
         if response.startswith('No Players Connected'):
@@ -175,14 +176,11 @@ def is_anyone_online(port, rcon_password, command):
             player_count = len(response.split('\n'))
             print(f'{player_count} players connected')
             return response, player_count
+    except rcon.exceptions.SessionTimeout:
+        print('Socket timed out')
+        return 'No', 0
     except Exception as e:
         print(f'An error occurred: {e}')
-        return 'No', 0
-    except ConnectionRefusedError:
-        print('Connection refused')
-        return 'No', 0
-    except TimeoutError:
-        print('Connection timed out')
         return 'No', 0
 
 
