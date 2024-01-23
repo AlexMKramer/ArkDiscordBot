@@ -10,6 +10,9 @@ import re
 import json
 from collections import defaultdict
 
+import subprocess
+
+
 load_dotenv()
 TOKEN = os.getenv('BOT_TOKEN')
 SERVER_IP = os.getenv('SERVER_IP')
@@ -21,6 +24,7 @@ TRIBE_LOG_PATH = os.getenv('TRIBE_LOG_PATH')
 
 # Docker client setup
 docker_client = docker.from_env()
+docker.compose.run()
 
 
 # Bot setup
@@ -167,11 +171,6 @@ def is_anyone_online(port, rcon_password, command):
             response = 'No'
             player_count = 0
             return response, player_count
-        elif response.endswith('name,playeruid,steamid'):
-            print('No players connected')
-            response = 'No'
-            player_count = 0
-            return response, player_count
         else:
             player_count = len(response.split('\n'))
             print(f'{player_count} players connected')
@@ -194,6 +193,37 @@ def is_container_running(container_name):
         return False
 
 
+def palworld_command(command):
+    # Specify the path to your Docker Compose file
+    compose_file_path = "/home/alexk/Desktop/palworld/docker-compose.yml"
+
+    # Define your Docker Compose command
+    docker_compose_command = [
+        "docker", "compose", "-f", compose_file_path,
+        "run", "--rm", "rcon", command
+    ]
+
+    try:
+        # Run the Docker Compose command and capture the output
+        result = subprocess.run(docker_compose_command, check=True, stdout=subprocess.PIPE, text=True)
+
+        # Access the output through the stdout attribute and store it in the 'response' variable
+        response = result.stdout.strip()
+        if response.endswith('name,playeruid,steamid'):
+            print('No players connected')
+            response = 'No'
+            player_count = 0
+            return response, player_count
+        else:
+            player_count = len(response.split('\n'))
+            print(f'{player_count} players connected')
+            print(response)
+            return response, player_count
+    except subprocess.CalledProcessError as e:
+        # Handle errors if the command fails
+        print(f"Error: {e}")
+
+
 # Task that runs every 5 minutes
 @tasks.loop(minutes=5)
 async def update_rich_presence():
@@ -210,7 +240,7 @@ async def update_rich_presence():
                 await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} players online!'))
             print('Ark: Someone online')
     elif is_container_running('palworld-dedicated-server'):
-        response, player_count = is_anyone_online(PALWORLD_PORT, PALWORLD_RCON_PASSWORD, 'ShowPlayers')
+        response, player_count = palworld_command('ShowPlayers')
         if response == 'No':
             await bot.change_presence(activity=discord.Game(name='Pal: Nobody online!'))
             print('Pal: No one online')
