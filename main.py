@@ -216,6 +216,8 @@ def palworld_command(command):
         else:
             # Remove string "name,playeruid,steamid" and new line from beginning of response
             response = response[23:]
+            # Remove anything after the first coma from each line
+            response = re.sub(r',.*', '', response)
             player_count = len(response.split('\n'))
             print(f'{player_count} players connected')
             print(response)
