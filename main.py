@@ -286,7 +286,7 @@ async def check_status(ctx):
     elif is_container_running('palworld-dedicated-server'):
         await ctx.respond('Palworld server is online!')
         # Check if anyone is online
-        response, player_count = is_anyone_online(PALWORLD_PORT, PALWORLD_RCON_PASSWORD, 'ShowPlayers')
+        response, player_count = palworld_command('ShowPlayers')
         if response == 'No':
             await ctx.send('No one is online.  :(')
         else:
@@ -360,7 +360,16 @@ async def stop_server(ctx, server_type: str):
     else:
         if server_type == 'ark-server':
             # Check if anyone is online
-            response, player_count = is_anyone_online()
+            response, player_count = is_anyone_online(SERVER_PORT, RCON_PASSWORD, 'listplayers')
+            if response == 'No':
+                await ctx.respond('No one is online, stopping server')
+                container.stop()
+            else:
+                await ctx.respond('Someone is online!  Run "/kill_server" to stop the server anyway.  :D')
+                await ctx.send(f'Users online:\n' + response)
+        elif server_type == 'palworld-dedicated-server':
+            # Check if anyone is online
+            response, player_count = palworld_command('ShowPlayers')
             if response == 'No':
                 await ctx.respond('No one is online, stopping server')
                 container.stop()
@@ -389,7 +398,17 @@ async def kill_server(ctx, server_type: str):
     else:
         if server_type == 'ark-server':
             # Check if anyone is online
-            response = is_anyone_online()
+            response = is_anyone_online(SERVER_PORT, RCON_PASSWORD, 'listplayers')
+            if response == 'No':
+                await ctx.respond('No one is online, stopping server')
+                container.stop()
+            else:
+                await ctx.respond('Someone is online, but killing the server anyway.  :D')
+                await ctx.send('Booting\n' + response)
+                container.stop()
+        elif server_type == 'palworld-dedicated-server':
+            # Check if anyone is online
+            response = palworld_command('ShowPlayers')
             if response == 'No':
                 await ctx.respond('No one is online, stopping server')
                 container.stop()
