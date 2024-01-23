@@ -214,6 +214,8 @@ def palworld_command(command):
             player_count = 0
             return response, player_count
         else:
+            # Remove string "name,playeruid,steamid" and new line from beginning of response
+            response = response[23:]
             player_count = len(response.split('\n'))
             print(f'{player_count} players connected')
             print(response)
