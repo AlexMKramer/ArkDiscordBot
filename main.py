@@ -24,7 +24,6 @@ TRIBE_LOG_PATH = os.getenv('TRIBE_LOG_PATH')
 
 # Docker client setup
 docker_client = docker.from_env()
-docker.compose.run()
 
 
 # Bot setup
