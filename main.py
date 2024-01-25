@@ -208,23 +208,27 @@ def palworld_command(command):
 
         # Access the output through the stdout attribute and store it in the 'response' variable
         response = result.stdout.strip()
-        if response.endswith('name,playeruid,steamid'):
-            print('No players connected')
-            response = 'No'
-            player_count = 0
-            return response, player_count
-        else:
-            # Remove string "name,playeruid,steamid" and new line from beginning of response
-            response = response[23:]
-            # Remove anything after the first coma from each line
-            response = re.sub(r',.*', '', response)
-            player_count = len(response.split('\n'))
-            print(f'{player_count} players connected')
-            print(response)
-            return response, player_count
+        return response
     except subprocess.CalledProcessError as e:
         # Handle errors if the command fails
         print(f"Error: {e}")
+
+
+def palworld_online_players(response):
+    if response.endswith('name,playeruid,steamid'):
+        print('No players connected')
+        response = 'No'
+        player_count = 0
+        return response, player_count
+    else:
+        # Remove string "name,playeruid,steamid" and new line from beginning of response
+        response = response[23:]
+        # Remove anything after the first coma from each line
+        response = re.sub(r',.*', '', response)
+        player_count = len(response.split('\n'))
+        print(f'{player_count} players connected')
+        print(response)
+        return response, player_count
 
 
 # Task that runs every 5 minutes
@@ -243,8 +247,9 @@ async def update_rich_presence():
                 await bot.change_presence(activity=discord.Game(name=f'ASA: {player_count} players online!'))
             print('Ark: Someone online')
     elif is_container_running('palworld-dedicated-server'):
-        response, player_count = palworld_command('ShowPlayers')
-        if response == 'No':
+        response = palworld_command('ShowPlayers')
+        player_names_response, player_count = palworld_online_players(response)
+        if player_names_response == 'No':
             await bot.change_presence(activity=discord.Game(name='Pal: Nobody online!'))
             print('Pal: No one online')
         else:
@@ -285,15 +290,19 @@ async def check_status(ctx):
         return
     elif is_container_running('palworld-dedicated-server'):
         await ctx.respond('Palworld server is online!')
+
+        # Check server info
+        info_response = palworld_command('Info')
         # Check if anyone is online
-        response, player_count = palworld_command('ShowPlayers')
-        if response == 'No':
-            await ctx.send('No one is online.  :(')
+        response = palworld_command('ShowPlayers')
+        player_names_response, player_count = palworld_online_players(response)
+        if player_names_response == 'No':
+            await ctx.send(info_response + '\nNo one is online.  :(')
         else:
             if player_count == 1:
-                await ctx.send(f'There is {player_count} player online!  :D\n' + response)
+                await ctx.send(info_response + f'There is {player_count} player online!  :D\n' + player_names_response)
             else:
-                await ctx.send(f'There are {player_count} players online!  :D\n' + response)
+                await ctx.send(info_response + f'There are {player_count} players online!  :D\n' + player_names_response)
         return
     elif is_container_running('satisfactory-server-coop'):
         await ctx.respond('Satisfactory server is online!')
@@ -369,13 +378,14 @@ async def stop_server(ctx, server_type: str):
                 await ctx.send(f'Users online:\n' + response)
         elif server_type == 'palworld-dedicated-server':
             # Check if anyone is online
-            response, player_count = palworld_command('ShowPlayers')
-            if response == 'No':
+            response = palworld_command('ShowPlayers')
+            player_names_response, player_count = palworld_online_players(response)
+            if player_names_response == 'No':
                 await ctx.respond('No one is online, stopping server')
                 container.stop()
             else:
                 await ctx.respond('Someone is online!  Run "/kill_server" to stop the server anyway.  :D')
-                await ctx.send(f'Users online:\n' + response)
+                await ctx.send(f'Users online:\n' + player_names_response)
         else:
             await ctx.respond('Stopping server...')
             container.stop()
@@ -398,7 +408,7 @@ async def kill_server(ctx, server_type: str):
     else:
         if server_type == 'ark-server':
             # Check if anyone is online
-            response = is_anyone_online(SERVER_PORT, RCON_PASSWORD, 'listplayers')
+            response, player_count = is_anyone_online(SERVER_PORT, RCON_PASSWORD, 'listplayers')
             if response == 'No':
                 await ctx.respond('No one is online, stopping server')
                 container.stop()
@@ -409,12 +419,13 @@ async def kill_server(ctx, server_type: str):
         elif server_type == 'palworld-dedicated-server':
             # Check if anyone is online
             response = palworld_command('ShowPlayers')
-            if response == 'No':
+            player_names_response, player_count = palworld_online_players(response)
+            if player_names_response == 'No':
                 await ctx.respond('No one is online, stopping server')
                 container.stop()
             else:
                 await ctx.respond('Someone is online, but killing the server anyway.  :D')
-                await ctx.send('Booting\n' + response)
+                await ctx.send('Booting\n' + player_names_response)
                 container.stop()
         else:
             await ctx.respond('Killing server...')
