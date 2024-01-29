@@ -295,6 +295,8 @@ async def on_connect():
 # Check the status of the server and return the number of players online and names
 @bot.slash_command(description='Check the status of the server')
 async def check_status(ctx):
+    # Update the rich presence
+    await update_rich_presence()
     # Run for loop to check if any servers in container_types are running
     for i in container_types:
         # If any server is running, check if anyone is online
@@ -318,9 +320,10 @@ async def check_status(ctx):
                 else:
                     await ctx.respond(f'{container_types[i]["short_name"]}: {player_count} players online!\n' + response)
                 print(f'{container_types[i]["short_name"]}: Someone online')
-        else:
-            await ctx.respond('No servers running')
-            print('No servers running')
+            break
+    else:
+        await ctx.respond('No servers running')
+        print('No servers running')
 
 
 @bot.slash_command(description='Get player death stats!')
