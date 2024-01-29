@@ -271,9 +271,11 @@ async def update_rich_presence():
                 else:
                     await bot.change_presence(activity=discord.Game(name=f'{container_types[i]["short_name"]}: {player_count} players online!'))
                 print(f'{container_types[i]["short_name"]}: Someone online')
-        else:  # If no servers are running, set the bots status to "No Servers Running"
-            await bot.change_presence(activity=discord.Game(name='No Servers Running'))
-            print('No servers running')
+            break
+    # if none of the containers are running, set the bots status to "No servers running"
+    else:
+        await bot.change_presence(activity=discord.Game(name='No servers running'))
+        print('No servers running')
 
 
 # Function to return container_types for autocomplete
