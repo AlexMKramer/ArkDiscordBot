@@ -41,19 +41,22 @@ server_types = [
 
 container_types = {
     "ark-server": {
-        "short_name": "ASA",  # "Ark Survival Evolved
+        "short_name": "ASA",  # "Ark Survival Ascended"
+        "long_name": "Ark Survival Ascended Dedicated Server",
         "port": SERVER_PORT,
         "rcon_password": RCON_PASSWORD,
         "players_command": "listplayers"
     },
     "palworld-dedicated-server": {
         "short_name": "Pal",  # "Palworld"
+        "long_name": "Palworld Dedicated Server",  # "Palworld"
         "port": PALWORLD_PORT,
         "rcon_password": PALWORLD_RCON_PASSWORD,
         "players_command": "ShowPlayers"
     },
     "satisfactory-server-coop": {
         "short_name": "Satisfactory",
+        "long_name": "Satisfactory Dedicated Server",
         "port": None,
         "rcon_password": None,
         "players_command": None
@@ -307,19 +310,19 @@ async def check_status(ctx):
             else:
                 response, player_count = is_anyone_online(container_types[i]['port'], container_types[i]['rcon_password'], container_types[i]['players_command'])
             if not response:
-                await ctx.respond(f'{container_types[i]["short_name"]}: Nobody online!')
-                print(f'{container_types[i]["short_name"]}: No one online')
+                await ctx.respond(f'{container_types[i]["long_name"]}: Nobody online!')
+                print(f'{container_types[i]["long_name"]}: No one online')
             else:
                 # If no player count is returned, set the bots status to the server name
                 if player_count is None:
                     await ctx.respond(f'{container_types[i]["short_name"]}')
-                    print(f'{container_types[i]["short_name"]}: Server online')
+                    print(f'{container_types[i]["long_name"]}: Server online')
                 # If player count is 1, respond with "1 player online" and the players name
                 elif player_count == 1:
-                    await ctx.respond(f'{container_types[i]["short_name"]}: {player_count} player online!\n' + response)
+                    await ctx.respond(f'{container_types[i]["long_name"]}: {player_count} player online!\n' + response)
                 else:
-                    await ctx.respond(f'{container_types[i]["short_name"]}: {player_count} players online!\n' + response)
-                print(f'{container_types[i]["short_name"]}: Someone online')
+                    await ctx.respond(f'{container_types[i]["long_name"]}: {player_count} players online!\n' + response)
+                print(f'{container_types[i]["long_name"]}: Someone online')
             break
     else:
         await ctx.respond('No servers running')
