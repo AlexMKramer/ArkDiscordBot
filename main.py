@@ -308,7 +308,7 @@ async def check_status(ctx):
                 response = palworld_command('ShowPlayers')
                 response, player_count = palworld_online_players(response)
                 info = palworld_command('info')
-                await ctx.respond(info)
+                await ctx.send(info)
             else:
                 response, player_count = is_anyone_online(container_types[i]['port'], container_types[i]['rcon_password'], container_types[i]['players_command'])
             if not response:
