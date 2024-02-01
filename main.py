@@ -356,7 +356,7 @@ async def start_server(ctx, server_type: str):
     # Check if server is running
     container = docker_client.containers.get(server_type)
     # Go through all server types and check if any are running
-    for i in server_types:
+    for i in container_types:
         # if any server is running respond with the server type
         if is_container_running(i):
             # If the server that is running is the same as the one that was requested, tell the user its already running
