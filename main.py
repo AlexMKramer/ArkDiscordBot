@@ -307,6 +307,8 @@ async def check_status(ctx):
             if i == 'palworld-dedicated-server':
                 response = palworld_command('ShowPlayers')
                 response, player_count = palworld_online_players(response)
+                info = palworld_command('info')
+                await ctx.respond(info)
             else:
                 response, player_count = is_anyone_online(container_types[i]['port'], container_types[i]['rcon_password'], container_types[i]['players_command'])
             if not response:
@@ -315,7 +317,7 @@ async def check_status(ctx):
             else:
                 # If no player count is returned, set the bots status to the server name
                 if player_count is None:
-                    await ctx.respond(f'{container_types[i]["short_name"]}')
+                    await ctx.respond(f'{container_types[i]["long_name"]}: Server online')
                     print(f'{container_types[i]["long_name"]}: Server online')
                 # If player count is 1, respond with "1 player online" and the players name
                 elif player_count == 1:
