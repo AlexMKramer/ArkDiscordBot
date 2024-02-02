@@ -295,6 +295,7 @@ async def on_connect():
     print(f'Logged in as {bot.user.name}')
 
 
-bot.load_extension('slash_commands')  # Load the slash commands module
+# Load the slash commands
+slash_commands.setup(bot)
 # Run the bot
 bot.run(TOKEN)
