@@ -31,7 +31,6 @@ docker_client = docker.from_env()
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix='/', intents=intents)
 bot.auto_sync_commands = True
-bot.load_extension('slash_commands')  # Load the slash commands module
 
 
 server_types = [
@@ -295,5 +294,7 @@ async def on_connect():
     update_rich_presence.start()
     print(f'Logged in as {bot.user.name}')
 
+
+bot.load_extension('slash_commands')  # Load the slash commands module
 # Run the bot
 bot.run(TOKEN)
