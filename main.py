@@ -29,7 +29,7 @@ docker_client = docker.from_env()
 
 # Bot setup
 intents = discord.Intents.default()
-bot = slash_commands.Bot(command_prefix='/', intents=intents)
+bot = commands.Bot(command_prefix='/', intents=intents)
 bot.auto_sync_commands = True
 
 
