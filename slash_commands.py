@@ -1,8 +1,10 @@
 import main
+import discord
 from discord import option
 from discord.ext import commands
 
-bot = main.bot
+intents = discord.Intents.default()
+bot = commands.Bot(command_prefix='/', intents=intents)
 
 
 # Slash commands
