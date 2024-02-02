@@ -278,7 +278,7 @@ async def update_rich_presence():
             break
     # if none of the containers are running, set the bots status to "No servers running"
     else:
-        await bot.change_presence(activity=discord.Game(name='No servers running'))
+        await bot.change_presence(activity=discord.Game(name='No servers running.'))
         print('No servers running')
 
 
