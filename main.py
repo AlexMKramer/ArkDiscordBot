@@ -384,10 +384,9 @@ async def start_server(ctx, server_type: str):
 @option(
     "force",
     description="Kill the server even if there are players online.",
-    autocomplete=bool,
     required=False
 )
-async def stop_server(ctx, server_type: str, force):
+async def stop_server(ctx, server_type: str, force: bool = False):
     container = docker_client.containers.get(server_type)
     # Check if server is running
     if not is_container_running(server_type):
