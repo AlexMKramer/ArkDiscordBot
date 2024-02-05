@@ -32,13 +32,6 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 bot.auto_sync_commands = True
 
 
-server_types = [
-    "ark-server",
-    "satisfactory-server-coop",
-    "palworld-dedicated-server"
-]
-
-
 container_types = {
     "ark-server": {
         "short_name": "ASA",  # "Ark Survival Ascended"
