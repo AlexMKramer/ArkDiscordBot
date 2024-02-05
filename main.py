@@ -373,6 +373,7 @@ async def start_server(ctx, server_type: str):
     container.start()
     # Respond with "Starting" then convert the server type into the long name and add "..."
     await ctx.respond(f'Starting {container_types[server_type]["long_name"]}...')
+    print(f'Starting {container_types[server_type]["long_name"]}...')
     return
 
 
