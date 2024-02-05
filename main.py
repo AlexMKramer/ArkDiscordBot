@@ -254,7 +254,9 @@ async def update_rich_presence():
                 response = palworld_command('ShowPlayers')
                 response, player_count = palworld_online_players(response)
             else:
-                response, player_count = is_anyone_online(container_types[i]['port'], container_types[i]['rcon_password'], container_types[i]['players_command'])
+                response, player_count = is_anyone_online(container_types[i]['port'],
+                                                          container_types[i]['rcon_password'],
+                                                          container_types[i]['players_command'])
             if not response:
                 await bot.change_presence(activity=discord.Game(name=f'{container_types[i]["short_name"]}: Nobody online!'))
                 print(f'{container_types[i]["short_name"]}: No one online')
@@ -263,9 +265,11 @@ async def update_rich_presence():
                     await bot.change_presence(activity=discord.Game(name=f'{container_types[i]["short_name"]}'))
                     print(f'{container_types[i]["short_name"]}: Server online')
                 elif player_count == 1:
-                    await bot.change_presence(activity=discord.Game(name=f'{container_types[i]["short_name"]}: {player_count} player online!'))
+                    await bot.change_presence(activity=discord.Game(name=f'{container_types[i]["short_name"]}: '
+                                                                         f'{player_count} player online!'))
                 else:
-                    await bot.change_presence(activity=discord.Game(name=f'{container_types[i]["short_name"]}: {player_count} players online!'))
+                    await bot.change_presence(activity=discord.Game(name=f'{container_types[i]["short_name"]}: '
+                                                                         f'{player_count} players online!'))
                 print(f'{container_types[i]["short_name"]}: Someone online')
             break
     # if none of the containers are running, set the bots status to "No servers running"
@@ -303,7 +307,9 @@ async def check_status(ctx):
                 info = palworld_command('info')
                 await ctx.send(info)
             else:
-                response, player_count = is_anyone_online(container_types[i]['port'], container_types[i]['rcon_password'], container_types[i]['players_command'])
+                response, player_count = is_anyone_online(container_types[i]['port'],
+                                                          container_types[i]['rcon_password'],
+                                                          container_types[i]['players_command'])
             if not response:
                 await ctx.respond(f'{container_types[i]["long_name"]}: Nobody online!')
                 print(f'{container_types[i]["long_name"]}: No one online')
@@ -354,16 +360,19 @@ async def start_server(ctx, server_type: str):
         if is_container_running(i):
             # If the server that is running is the same as the one that was requested, tell the user its already running
             if i == server_type:
-                await ctx.respond(f'{i} is already running')
+                # Convert the server type into the long name and respond with "is already running"
+                await ctx.respond(f'{container_types[i]["long_name"]} is already running')
                 return
             # If the server that is running is not the same as the one that was requested, tell the user to stop the
             # running server first
             else:
-                await ctx.respond(f'{i} is already running.  Stop it first!')
+                # Convert the server type into the long name and respond with "is already running.  Stop it first!"
+                await ctx.respond(f'{container_types[i]["long_name"]} is already running.  Stop it first!')
                 return
     # If no servers are running, start the server
     container.start()
-    await ctx.respond(f'Starting {server_type}...')
+    # Respond with "Starting" then convert the server type into the long name and add "..."
+    await ctx.respond(f'Starting {container_types[server_type]["long_name"]}...')
     return
 
 
@@ -390,65 +399,37 @@ async def stop_server(ctx, server_type: str, force: bool = False):
                 response = palworld_command('ShowPlayers')
                 response, player_count = palworld_online_players(response)
             else:
-                response, player_count = is_anyone_online(container_types[server_type]['port'], container_types[server_type]['rcon_password'], container_types[server_type]['players_command'])
+                response, player_count = is_anyone_online(container_types[server_type]['port'],
+                                                          container_types[server_type]['rcon_password'],
+                                                          container_types[server_type]['players_command'])
             if not response:
-                await ctx.respond('No one is online, stopping server')
-                print('No one is online, stopping server')
+                await ctx.respond(f"{container_types[server_type]['long_name']} is running and no one is online, "
+                                  f"stopping server")
+                print(f"{container_types[server_type]['long_name']} running, no one online, stopping server")
                 container.stop()
             else:
                 # If player count is None, respond with "Server is running, can't check for players"
                 if player_count is None:
                     if force:
-                        await ctx.respond("Satisfactory server is running and we can't check how many players are "
-                                          "online, but we are killing it anyway")
+                        await ctx.respond(f"{container_types[server_type]['long_name']} is running and we can't check "
+                                          f"how many players are online, but we are killing it anyway")
+                        print(f"{container_types[server_type]['long_name']} running, can't check for players, but "
+                              f"killing anyway")
                         container.stop()
                     else:
-                        await ctx.respond("Satisfactory server running, can't check for players")
-                        print("Satisfactory server running, can't check for players")
+                        await ctx.respond(f"{container_types[server_type]['long_name']} running, can't check for players")
+                        print(f"{container_types[server_type]['long_name']}  running, can't check for players")
                 # If player count is >0 respond with "Someone is online"
                 else:
                     if force:
-                        await ctx.respond("Someone is online, but we are killing the server anyway!")
+                        await ctx.respond(f"{container_types[server_type]['long_name']} is running and someone is "
+                                          f"online, but we are killing the server anyway!")
                         await ctx.send(f'Suck it:\n' + response)
                     else:
-                        await ctx.respond('Someone is online!  Choose "force" to stop the server anyway.  :D')
+                        await ctx.respond(f"{container_types[server_type]['long_name']} is running and someone is "
+                                          f"online!  Choose 'force' to stop the server anyway.  :D")
                         await ctx.send(f'Users online:\n' + response)
 
-
-@bot.slash_command(description='Kill a server')
-@option(
-    "server_type",
-    description="Choose a server to kill",
-    autocomplete=container_types_autocomplete,
-    required=True
-)
-async def kill_server(ctx, server_type: str):
-    container = docker_client.containers.get(server_type)
-    # Check if server is running
-    if not is_container_running(server_type):
-        await ctx.respond('Server is not running')
-    else:
-        if is_container_running(server_type):
-            if server_type == 'palworld-dedicated-server':
-                response = palworld_command('ShowPlayers')
-                response, player_count = palworld_online_players(response)
-            else:
-                response, player_count = is_anyone_online(container_types[server_type]['port'], container_types[server_type]['rcon_password'], container_types[server_type]['players_command'])
-            if not response:
-                await ctx.respond('No one is online, stopping server')
-                print('No one is online, stopping server')
-                container.stop()
-            else:
-                # If player count is None, respond with "Server is running, can't check for players"
-                if player_count is None:
-                    await ctx.respond("Satisfactory server running, can't check for players, but still killing it")
-                    print("Satisfactory server running, can't check for players")
-                    container.stop()
-                # If player count is >0 respond with "Someone is online"
-                else:
-                    await ctx.respond('Someone is online!  Killing the server anyway! :D')
-                    await ctx.send(f'Suck it:\n' + response)
-                    container.stop()
 
 # Run the bot
 bot.run(TOKEN)
