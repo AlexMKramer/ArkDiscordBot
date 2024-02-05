@@ -381,7 +381,13 @@ async def start_server(ctx, server_type: str):
     autocomplete=container_types_autocomplete,
     required=True
 )
-async def stop_server(ctx, server_type: str):
+@option(
+    "force",
+    description="Kill the server even if there are players online.",
+    autocomplete=bool,
+    required=False
+)
+async def stop_server(ctx, server_type: str, force):
     container = docker_client.containers.get(server_type)
     # Check if server is running
     if not is_container_running(server_type):
@@ -400,12 +406,21 @@ async def stop_server(ctx, server_type: str):
             else:
                 # If player count is None, respond with "Server is running, can't check for players"
                 if player_count is None:
-                    await ctx.respond("Satisfactory server running, can't check for players")
-                    print("Satisfactory server running, can't check for players")
+                    if force:
+                        await ctx.respond("Satisfactory server is running and we can't check how many players are "
+                                          "online, but we are killing it anyway")
+                        container.stop()
+                    else:
+                        await ctx.respond("Satisfactory server running, can't check for players")
+                        print("Satisfactory server running, can't check for players")
                 # If player count is >0 respond with "Someone is online"
                 else:
-                    await ctx.respond('Someone is online!  Run "/kill_server" to stop the server anyway.  :D')
-                    await ctx.send(f'Users online:\n' + response)
+                    if force:
+                        await ctx.respond("Someone is online, but we are killing the server anyway!")
+                        await ctx.send(f'Suck it:\n' + response)
+                    else:
+                        await ctx.respond('Someone is online!  Choose "force" to stop the server anyway.  :D')
+                        await ctx.send(f'Users online:\n' + response)
 
 
 @bot.slash_command(description='Kill a server')
