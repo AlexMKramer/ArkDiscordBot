@@ -315,7 +315,7 @@ async def check_status(ctx):
                 print(f'{container_types[i]["long_name"]}: No one online')
             else:
                 # If no player count is returned, set the bots status to the server name
-                if player_count is None:
+                if player_count is None or player_count == 0:
                     await ctx.respond(f'{container_types[i]["long_name"]}: Server online')
                     print(f'{container_types[i]["long_name"]}: Server online')
                 # If player count is 1, respond with "1 player online" and the players name
